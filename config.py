@@ -1,0 +1,45 @@
+"""Configuration management for Enterprise RAG system."""
+
+from pydantic_settings import BaseSettings
+from pathlib import Path
+
+
+class Settings(BaseSettings):
+    """Application settings."""
+
+    # LLM Configuration
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+    llm_model: str = "gpt-4-turbo-preview"
+    embedding_model: str = "text-embedding-3-small"
+
+    # Neo4j Configuration
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "password"
+
+    # Qdrant Configuration
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_collection: str = "enterprise_rag"
+
+    # Application Configuration
+    upload_dir: Path = Path("./data/uploads")
+    chunk_size: int = 512
+    chunk_overlap: int = 50
+
+    # Evaluation
+    eval_mode: str = "development"
+    min_relevance_score: float = 0.7
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+
+settings = Settings()
+
+# Ensure directories exist
+settings.upload_dir.mkdir(parents=True, exist_ok=True)
+Path("./data/processed").mkdir(parents=True, exist_ok=True)
+Path("./logs").mkdir(parents=True, exist_ok=True)
