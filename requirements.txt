@@ -17,8 +17,8 @@ neo4j==5.16.0
 PyPDF2==3.0.1
 pillow==10.2.0
 pytesseract==0.3.10
-openai-whisper==20231117
-opencv-python==4.9.0.80
+# Note: We use OpenAI's Whisper API (via openai package) instead of local whisper
+opencv-python-headless==4.9.0.80
 moviepy==1.0.3
 
 # Evaluation

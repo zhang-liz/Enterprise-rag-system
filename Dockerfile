@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including build tools)
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     ffmpeg \
@@ -11,7 +11,12 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and setuptools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy requirements
 COPY requirements.txt .
