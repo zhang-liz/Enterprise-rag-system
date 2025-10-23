@@ -4,7 +4,7 @@ Get the Enterprise RAG system running in 5 minutes.
 
 ## Prerequisites
 
-1. **Python 3.9+**
+1. **Python 3.13**
    ```bash
    python --version
    ```
@@ -19,7 +19,9 @@ Get the Enterprise RAG system running in 5 minutes.
 
 ## Installation Steps
 
-### 1. Install Python Dependencies
+### 1. Install Python Dependencies (local development only)
+
+> Skip this step if you plan to run the FastAPI app inside Docker. The container image installs these dependencies during the build.
 
 ```bash
 pip install -r requirements.txt
@@ -44,11 +46,11 @@ OPENAI_API_KEY=sk-your-key-here
 
 ```bash
 # Start Neo4j and Qdrant
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be ready (about 30 seconds)
 # Check status:
-docker-compose ps
+docker compose ps
 ```
 
 You should see:
@@ -60,6 +62,8 @@ You should see:
 ```bash
 python app.py
 ```
+
+> Prefer running the API inside Docker? Uncomment the `app` service in `docker-compose.yml` and run `docker compose up --build app`. In that workflow you can skip the local `pip install` step.
 
 You should see:
 ```
@@ -102,13 +106,13 @@ Try these with your uploaded documents:
 
 **Solution**: Make sure Docker containers are running
 ```bash
-docker-compose up -d
-docker-compose ps
+docker compose up -d
+docker compose ps
 ```
 
 ### Issue: "Module not found" errors
 
-**Solution**: Install dependencies
+**Solution**: Install dependencies (only needed for local runs)
 ```bash
 pip install -r requirements.txt
 ```
@@ -180,20 +184,20 @@ Should return:
 
 ### Start Everything
 ```bash
-docker-compose up -d && python app.py
+docker compose up -d && python app.py
 ```
 
 ### Stop Everything
 ```bash
 # Stop application (Ctrl+C)
 # Stop infrastructure
-docker-compose down
+docker compose down
 ```
 
 ### Reset Everything
 ```bash
 # Warning: This deletes all data!
-docker-compose down -v
+docker compose down -v
 rm -rf data/uploads/* data/processed/*
 ```
 
@@ -203,7 +207,7 @@ rm -rf data/uploads/* data/processed/*
 tail -f logs/app.log
 
 # Docker logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## Common Workflows

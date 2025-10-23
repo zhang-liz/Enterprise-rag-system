@@ -318,7 +318,7 @@ Query: "What products did John mention in the video?"
 ## Technology Stack
 
 ### Core
-- **Python 3.11**: Main language
+- **Python 3.13**: Main language
 - **FastAPI**: Web framework
 - **Pydantic**: Data validation
 

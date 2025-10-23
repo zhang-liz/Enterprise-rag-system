@@ -55,7 +55,7 @@ A production-grade, multimodal Retrieval-Augmented Generation (RAG) system with 
 ## Installation
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.13
 - Docker and Docker Compose (for Neo4j and Qdrant)
 - OpenAI API key
 
@@ -67,7 +67,8 @@ A production-grade, multimodal Retrieval-Augmented Generation (RAG) system with 
    cd test-rag
    ```
 
-2. **Install dependencies**
+2. **Install dependencies** (local development only)
+   > Skip this step if you plan to run the FastAPI app inside Docker. The container image installs Python dependencies during the build.
    ```bash
    pip install -r requirements.txt
    ```
@@ -80,13 +81,14 @@ A production-grade, multimodal Retrieval-Augmented Generation (RAG) system with 
 
 4. **Start infrastructure**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 5. **Run the application**
    ```bash
    python app.py
    ```
+   > Prefer running the API inside Docker? Uncomment the `app` service in `docker-compose.yml` and run `docker compose up --build app`. In that workflow you can skip the local `pip install` step.
 
 6. **Access the UI**
    Open http://localhost:8000 in your browser
@@ -322,8 +324,8 @@ brew install ffmpeg
 ### Issue: Connection refused to Neo4j/Qdrant
 **Solution**: Ensure Docker containers are running
 ```bash
-docker-compose ps
-docker-compose up -d
+docker compose ps
+docker compose up -d
 ```
 
 ## Contributing
