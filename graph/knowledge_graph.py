@@ -260,11 +260,12 @@ class KnowledgeGraph:
                     nodes.add((node["name"], node["type"]))
 
                 for edge in record["edges"]:
+                    edge_props = dict(edge) if hasattr(edge, "keys") else {}
                     edges.append({
                         "source": edge.start_node["name"],
                         "target": edge.end_node["name"],
-                        "type": edge.get("type", "RELATES_TO"),
-                        "description": edge.get("description", "")
+                        "type": edge_props.get("type", "RELATES_TO"),
+                        "description": edge_props.get("description", "")
                     })
 
             return {
