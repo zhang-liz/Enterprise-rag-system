@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pathlib import Path
 from datetime import datetime
 
@@ -60,6 +60,3 @@ class BaseProcessor(ABC):
             start += (chunk_size - overlap)
 
         return chunks
-
-
-from pydantic import Field
