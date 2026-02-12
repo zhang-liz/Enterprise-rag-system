@@ -8,7 +8,7 @@ Query processing pipeline with:
 """
 
 from typing import Optional, List, Dict, Any, Tuple
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from openai import OpenAI
 from evaluation import QueryType, EvaluationMetrics, evaluate_response
 from search import HybridSearchOrchestrator, SearchResult
@@ -23,8 +23,9 @@ class QueryRequest(BaseModel):
     user_id: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
 
-    @validator('query')
-    def validate_query(cls, v):
+    @field_validator('query')
+    @classmethod
+    def validate_query(cls, v: str) -> str:
         """Validate query is safe and meaningful."""
         # Remove excessive whitespace
         v = re.sub(r'\s+', ' ', v.strip())
