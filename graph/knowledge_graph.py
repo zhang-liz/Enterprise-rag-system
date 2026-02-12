@@ -234,19 +234,23 @@ class KnowledgeGraph:
         """
         with self.driver.session() as session:
             if relationship_types:
-                rel_filter = "|".join(relationship_types)
+                # Note: max_depth must be literal in variable-length path; relationship_types uses parameter
                 query = f"""
                 MATCH path = (start:Entity {{name: $start_entity}})-[r:RELATES_TO*1..{max_depth}]-(node:Entity)
-                WHERE all(rel in relationships(path) WHERE rel.type IN {relationship_types})
+                WHERE all(rel in relationships(path) WHERE rel.type IN $relationship_types)
                 RETURN nodes(path) as nodes, relationships(path) as edges
                 """
+                result = session.run(
+                    query,
+                    start_entity=start_entity,
+                    relationship_types=relationship_types
+                )
             else:
                 query = f"""
                 MATCH path = (start:Entity {{name: $start_entity}})-[r:RELATES_TO*1..{max_depth}]-(node:Entity)
                 RETURN nodes(path) as nodes, relationships(path) as edges
                 """
-
-            result = session.run(query, start_entity=start_entity)
+                result = session.run(query, start_entity=start_entity)
 
             nodes = set()
             edges = []
