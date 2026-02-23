@@ -358,8 +358,16 @@ async def root():
 async def upload_file(file: UploadFile = File(...)):
     """Upload and process a file."""
     try:
+        # Sanitize filename to prevent path traversal (e.g. ../../etc/passwd)
+        raw_name = file.filename or "unnamed"
+        safe_name = Path(raw_name).name
+        if not safe_name or safe_name == ".":
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        file_path = (settings.upload_dir / safe_name).resolve()
+        upload_dir_resolved = settings.upload_dir.resolve()
+        if not str(file_path).startswith(str(upload_dir_resolved)):
+            raise HTTPException(status_code=400, detail="Invalid file path")
         # Save file
-        file_path = settings.upload_dir / file.filename
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
@@ -392,7 +400,7 @@ async def upload_file(file: UploadFile = File(...)):
         # Add to knowledge graph
         kg.add_document(
             file_id=processed_content.file_id,
-            file_name=file.filename,
+            file_name=safe_name,
             modality=processed_content.content_type,
             metadata=processed_content.metadata
         )
@@ -408,7 +416,7 @@ async def upload_file(file: UploadFile = File(...)):
             file_id=processed_content.file_id,
             chunks=processed_content.chunks,
             metadata={
-                "file_name": file.filename,
+                "file_name": safe_name,
                 "modality": processed_content.content_type,
                 **processed_content.metadata
             }
@@ -417,15 +425,17 @@ async def upload_file(file: UploadFile = File(...)):
         return JSONResponse({
             "status": "success",
             "file_id": processed_content.file_id,
-            "file_name": file.filename,
+            "file_name": safe_name,
             "content_type": processed_content.content_type,
             "num_entities": len(entities),
             "num_relationships": len(relationships),
             "num_chunks": len(processed_content.chunks)
         })
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Upload processing failed")
 
 
 @app.post("/query", response_model=Answer)
