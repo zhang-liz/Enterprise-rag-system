@@ -12,7 +12,12 @@ from qdrant_client.models import (
 )
 from openai import OpenAI
 from config import settings
-import hashlib
+import uuid
+
+
+def _point_id(doc_or_chunk_id: str) -> str:
+    """Generate a stable, Qdrant-compatible UUID from a string ID."""
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, doc_or_chunk_id))
 
 
 class VectorDatabase:
@@ -65,9 +70,9 @@ class VectorDatabase:
             # Generate embedding
             embedding = self.generate_embedding(text)
 
-            # Create point
+            # Create point (UUID required by Qdrant for string IDs)
             point = PointStruct(
-                id=hashlib.md5(doc_id.encode()).hexdigest()[:16],  # Use first 16 chars as numeric-like ID
+                id=_point_id(doc_id),
                 vector=embedding,
                 payload={
                     "doc_id": doc_id,
@@ -106,9 +111,9 @@ class VectorDatabase:
                 # Generate embedding
                 embedding = self.generate_embedding(chunk)
 
-                # Create unique ID for chunk
+                # Create unique ID for chunk (stable UUID for same file+index)
                 chunk_id = f"{file_id}_chunk_{idx}"
-                point_id = hashlib.md5(chunk_id.encode()).hexdigest()[:16]
+                point_id = _point_id(chunk_id)
 
                 # Create point
                 point = PointStruct(
@@ -218,7 +223,7 @@ class VectorDatabase:
     def get_document(self, doc_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve document by ID."""
         try:
-            point_id = hashlib.md5(doc_id.encode()).hexdigest()[:16]
+            point_id = _point_id(doc_id)
             result = self.client.retrieve(
                 collection_name=self.collection_name,
                 ids=[point_id]
@@ -236,7 +241,7 @@ class VectorDatabase:
     def delete_document(self, doc_id: str) -> bool:
         """Delete document from vector database."""
         try:
-            point_id = hashlib.md5(doc_id.encode()).hexdigest()[:16]
+            point_id = _point_id(doc_id)
             self.client.delete(
                 collection_name=self.collection_name,
                 points_selector=[point_id]
