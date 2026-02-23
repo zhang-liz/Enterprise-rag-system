@@ -34,9 +34,9 @@ RUN mkdir -p data/uploads data/processed logs
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check (uses httpx from requirements.txt)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')"
 
 # Run application
 CMD ["python", "app.py"]
