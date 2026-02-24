@@ -8,21 +8,24 @@ FastAPI application with endpoints for:
 - System statistics
 """
 
+import logging
+import shutil
+from pathlib import Path
+from typing import List, Optional
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-from typing import List, Optional
-import shutil
-import asyncio
 
 from config import settings
-from ingestion import TextProcessor, ImageProcessor, AudioProcessor, VideoProcessor
 from extraction import EntityExtractor
 from graph import KnowledgeGraph
-from vector_store import VectorDatabase
-from search import HybridSearchOrchestrator
+from ingestion import TextProcessor, ImageProcessor, AudioProcessor, VideoProcessor
 from pipeline import QueryProcessor, QueryRequest, Answer
+from search import HybridSearchOrchestrator
+from vector_store import VectorDatabase
+
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI
 app = FastAPI(
@@ -444,8 +447,11 @@ async def query(request: QueryRequest):
     try:
         answer = await query_processor.process(request)
         return answer
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Query processing failed")
+        raise HTTPException(status_code=500, detail="Query processing failed")
 
 
 @app.get("/stats")
@@ -459,8 +465,9 @@ async def get_statistics():
             "graph": graph_stats,
             "vector": vector_stats
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Failed to retrieve statistics")
+        raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
 @app.get("/health")
