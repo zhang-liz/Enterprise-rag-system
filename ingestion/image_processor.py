@@ -1,9 +1,12 @@
 """Image processor with OCR and captioning."""
 
 import hashlib
+import logging
 from pathlib import Path
 from typing import Optional
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 import pytesseract
 from openai import OpenAI
 import base64
@@ -64,7 +67,7 @@ class ImageProcessor(BaseProcessor):
             text = pytesseract.image_to_string(image)
             return text.strip()
         except Exception as e:
-            print(f"OCR extraction failed: {str(e)}")
+            logger.warning("OCR extraction failed for %s: %s", file_path, e)
             return ""
 
     def _generate_caption(self, file_path: Path) -> str:
@@ -100,5 +103,5 @@ class ImageProcessor(BaseProcessor):
             return response.choices[0].message.content
 
         except Exception as e:
-            print(f"Image captioning failed: {str(e)}")
+            logger.warning("Image captioning failed for %s: %s", file_path, e)
             return "Image caption not available"

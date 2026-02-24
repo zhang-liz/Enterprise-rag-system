@@ -1,9 +1,12 @@
 """Video processor with frame extraction and audio transcription."""
 
 import hashlib
+import logging
 from pathlib import Path
 from typing import List
 import cv2
+
+logger = logging.getLogger(__name__)
 from moviepy.editor import VideoFileClip
 from .base import BaseProcessor, ProcessedContent
 from .audio_processor import AudioProcessor
@@ -80,7 +83,7 @@ class VideoProcessor(BaseProcessor):
             return audio_content.text
 
         except Exception as e:
-            print(f"Audio extraction failed: {str(e)}")
+            logger.warning("Audio extraction failed for %s: %s", video_path, e)
             return "Audio transcription not available"
 
     def _extract_key_frames(self, video_path: Path, num_frames: int = 5) -> List[str]:
@@ -119,7 +122,7 @@ class VideoProcessor(BaseProcessor):
             cap.release()
 
         except Exception as e:
-            print(f"Frame extraction failed: {str(e)}")
+            logger.warning("Frame extraction failed for %s: %s", video_path, e)
             frame_descriptions.append("Frame extraction failed")
 
         return frame_descriptions
