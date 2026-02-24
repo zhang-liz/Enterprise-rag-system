@@ -7,8 +7,11 @@ Query processing pipeline with:
 5. Post-processing
 """
 
+import logging
 from typing import Optional, List, Dict, Any, Tuple
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 from openai import OpenAI
 from evaluation import QueryType, EvaluationMetrics, evaluate_response
 from search import HybridSearchOrchestrator, SearchResult
@@ -199,7 +202,7 @@ Return JSON:
             )
 
         except Exception as e:
-            print(f"Query triage failed: {str(e)}")
+            logger.warning("Query triage failed, using defaults: %s", e)
             # Fallback to defaults
             return QueryAnalysis(
                 original_query=query,
