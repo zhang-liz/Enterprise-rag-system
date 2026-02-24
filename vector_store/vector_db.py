@@ -1,5 +1,6 @@
 """Vector database implementation using Qdrant."""
 
+import logging
 from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -13,6 +14,9 @@ from qdrant_client.models import (
 from openai import OpenAI
 from config import settings
 import uuid
+
+
+logger = logging.getLogger(__name__)
 
 
 def _point_id(doc_or_chunk_id: str) -> str:
@@ -91,7 +95,7 @@ class VectorDatabase:
             return True
 
         except Exception as e:
-            print(f"Failed to add document: {str(e)}")
+            logger.exception("Failed to add document: %s", doc_id)
             return False
 
     def add_chunks(
@@ -140,7 +144,7 @@ class VectorDatabase:
             return True
 
         except Exception as e:
-            print(f"Failed to add chunks: {str(e)}")
+            logger.exception("Failed to add chunks for file: %s", file_id)
             return False
 
     def semantic_search(
@@ -204,7 +208,7 @@ class VectorDatabase:
             return results
 
         except Exception as e:
-            print(f"Semantic search failed: {str(e)}")
+            logger.exception("Semantic search failed")
             return []
 
     def search_by_modality(
@@ -235,7 +239,7 @@ class VectorDatabase:
             return None
 
         except Exception as e:
-            print(f"Failed to retrieve document: {str(e)}")
+            logger.exception("Failed to retrieve document: %s", doc_id)
             return None
 
     def delete_document(self, doc_id: str) -> bool:
@@ -249,7 +253,7 @@ class VectorDatabase:
             return True
 
         except Exception as e:
-            print(f"Failed to delete document: {str(e)}")
+            logger.exception("Failed to delete document: %s", doc_id)
             return False
 
     def get_statistics(self) -> Dict[str, Any]:
@@ -264,5 +268,5 @@ class VectorDatabase:
             }
 
         except Exception as e:
-            print(f"Failed to get statistics: {str(e)}")
+            logger.exception("Failed to get vector database statistics")
             return {}
