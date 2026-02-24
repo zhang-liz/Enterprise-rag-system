@@ -1,10 +1,13 @@
 """Entity and relationship extraction using LLMs."""
 
+import json
+import logging
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 from openai import OpenAI
-import json
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class Entity(BaseModel):
@@ -83,7 +86,7 @@ class EntityExtractor:
             return entities, relationships
 
         except Exception as e:
-            print(f"Entity extraction failed: {str(e)}")
+            logger.warning("Entity extraction failed: %s", e)
             return [], []
 
     def _build_extraction_prompt(
@@ -154,7 +157,7 @@ Focus on:
                 )
                 entities.append(entity)
             except Exception as ex:
-                print(f"Failed to parse entity: {ex}")
+                logger.debug("Failed to parse entity: %s", ex)
 
         return entities
 
@@ -177,7 +180,7 @@ Focus on:
                 )
                 relationships.append(rel)
             except Exception as ex:
-                print(f"Failed to parse relationship: {ex}")
+                logger.debug("Failed to parse relationship: %s", ex)
 
         return relationships
 
