@@ -1,9 +1,13 @@
 """Knowledge Graph implementation using Neo4j."""
 
+import json
+import logging
 from typing import List, Dict, Any, Optional
 from neo4j import GraphDatabase
 from config import settings
 from extraction import Entity, Relationship
+
+logger = logging.getLogger(__name__)
 
 
 class KnowledgeGraph:
@@ -70,7 +74,7 @@ class KnowledgeGraph:
                 )
                 return True
             except Exception as e:
-                print(f"Failed to add entity: {str(e)}")
+                logger.exception("Failed to add entity: %s", entity.name)
                 return False
 
     def add_relationship(self, relationship: Relationship) -> bool:
@@ -98,7 +102,7 @@ class KnowledgeGraph:
                 )
                 return True
             except Exception as e:
-                print(f"Failed to add relationship: {str(e)}")
+                logger.exception("Failed to add relationship: %s -> %s", relationship.source_entity, relationship.target_entity)
                 return False
 
     def add_document(
@@ -122,11 +126,11 @@ class KnowledgeGraph:
                     file_id=file_id,
                     file_name=file_name,
                     modality=modality,
-                    metadata=str(metadata)
+                    metadata=json.dumps(metadata, default=str)
                 )
                 return True
             except Exception as e:
-                print(f"Failed to add document: {str(e)}")
+                logger.exception("Failed to add document: %s", file_id)
                 return False
 
     def find_entity(self, entity_name: str) -> Optional[Dict[str, Any]]:
