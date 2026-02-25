@@ -10,6 +10,7 @@ FastAPI application with endpoints for:
 
 import logging
 import shutil
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional
 
@@ -27,11 +28,20 @@ from vector_store import VectorDatabase
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Validate required config at startup so the app fails fast with a clear error."""
+    settings.validate_required()
+    yield
+
+
 # Initialize FastAPI
 app = FastAPI(
     title="Enterprise RAG System",
     description="Multimodal Retrieval-Augmented Generation with Knowledge Graph",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Initialize components
