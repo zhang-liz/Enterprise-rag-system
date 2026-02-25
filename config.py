@@ -1,7 +1,8 @@
 """Configuration management for Enterprise RAG system."""
 
-from pydantic_settings import BaseSettings
 from pathlib import Path
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -35,6 +36,17 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+
+    def validate_required(self) -> None:
+        """
+        Validate that required settings are set for running the application.
+        Call at app startup to fail fast with a clear error.
+        """
+        if not (self.openai_api_key or "").strip():
+            raise ValueError(
+                "OPENAI_API_KEY is not set. "
+                "Set it in your environment or in a .env file (see .env.example)."
+            )
 
 
 settings = Settings()
