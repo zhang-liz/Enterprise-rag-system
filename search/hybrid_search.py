@@ -3,14 +3,19 @@ Hybrid search orchestrator combining:
 1. Graph traversal (structured knowledge)
 2. Keyword filtering (exact matches)
 3. Semantic vector retrieval (similarity search)
+
+Sync Neo4j and Qdrant calls are run in a thread pool via asyncio.to_thread
+so the event loop is not blocked.
 """
 
-from typing import List, Dict, Any, Optional
+import asyncio
+import re
 from dataclasses import dataclass
+from typing import List, Dict, Any, Optional
+
+from evaluation import QueryType
 from graph import KnowledgeGraph
 from vector_store import VectorDatabase
-from evaluation import QueryType
-import re
 
 
 @dataclass
@@ -70,19 +75,25 @@ class HybridSearchOrchestrator:
         entities = self._extract_entities(query)
         keywords = self._extract_keywords(query)
 
-        # 1. Graph Search (if entities found)
+        # 1. Graph Search (if entities found) - run sync KG calls in thread pool
         if enable_graph and entities:
-            graph_results = await self._graph_search(entities, query_type)
+            graph_results = await asyncio.to_thread(
+                self._graph_search_sync, entities, query_type
+            )
             results.extend(graph_results)
 
-        # 2. Keyword Search
+        # 2. Keyword Search - run sync KG calls in thread pool
         if enable_keyword and keywords:
-            keyword_results = await self._keyword_search(keywords)
+            keyword_results = await asyncio.to_thread(
+                self._keyword_search_sync, keywords
+            )
             results.extend(keyword_results)
 
-        # 3. Vector Semantic Search (always)
+        # 3. Vector Semantic Search (always) - run sync Qdrant calls in thread pool
         if enable_vector:
-            vector_results = await self._vector_search(query, top_k)
+            vector_results = await asyncio.to_thread(
+                self._vector_search_sync, query, top_k
+            )
             results.extend(vector_results)
 
         # Merge and rank results
@@ -90,24 +101,21 @@ class HybridSearchOrchestrator:
 
         return ranked_results[:top_k]
 
-    async def _graph_search(
+    def _graph_search_sync(
         self,
         entities: List[str],
         query_type: QueryType
     ) -> List[SearchResult]:
         """
-        Search knowledge graph for entities and their relationships.
-
-        For semantic linkage queries, this is crucial for cross-modal retrieval.
+        Sync implementation: search knowledge graph for entities and relationships.
+        Called via asyncio.to_thread from _graph_search.
         """
         results = []
 
         for entity in entities:
-            # Find entity in graph
             entity_info = self.kg.find_entity(entity)
 
             if entity_info:
-                # Add entity information
                 entity_data = entity_info["entity"]
                 results.append(SearchResult(
                     content=f"Entity: {entity_data.get('name')} ({entity_data.get('type')})\n"
@@ -121,7 +129,6 @@ class HybridSearchOrchestrator:
                     }
                 ))
 
-                # For semantic linkage, get related entities
                 if query_type == QueryType.SEMANTIC_LINKAGE:
                     related = self.kg.find_related_entities(entity, max_depth=2)
                     for rel in related:
@@ -129,7 +136,7 @@ class HybridSearchOrchestrator:
                         results.append(SearchResult(
                             content=f"Related Entity: {rel_entity.get('name')} ({rel_entity.get('type')})",
                             source="graph",
-                            score=rel_entity.get("confidence", 0.7) * 0.9,  # Slightly lower score
+                            score=rel_entity.get("confidence", 0.7) * 0.9,
                             metadata={
                                 "entity_name": rel_entity.get("name"),
                                 "entity_type": rel_entity.get("type"),
@@ -141,18 +148,12 @@ class HybridSearchOrchestrator:
 
         return results
 
-    async def _keyword_search(
-        self,
-        keywords: List[str]
-    ) -> List[SearchResult]:
+    def _keyword_search_sync(self, keywords: List[str]) -> List[SearchResult]:
         """
-        Keyword-based search in knowledge graph.
-
-        Good for exact matches and filtering.
+        Sync implementation: keyword-based search in knowledge graph.
+        Called via asyncio.to_thread from _keyword_search.
         """
         results = []
-
-        # Search entities by keywords
         entities = self.kg.keyword_search(keywords, limit=10)
 
         for item in entities:
@@ -160,7 +161,7 @@ class HybridSearchOrchestrator:
             results.append(SearchResult(
                 content=f"{entity.get('name')}: {entity.get('description', '')}",
                 source="keyword",
-                score=0.85,  # Fixed score for keyword matches
+                score=0.85,
                 metadata={
                     "entity_name": entity.get("name"),
                     "entity_type": entity.get("type"),
@@ -171,19 +172,12 @@ class HybridSearchOrchestrator:
 
         return results
 
-    async def _vector_search(
-        self,
-        query: str,
-        top_k: int
-    ) -> List[SearchResult]:
+    def _vector_search_sync(self, query: str, top_k: int) -> List[SearchResult]:
         """
-        Semantic vector search.
-
-        Best for natural language queries and fuzzy matching.
+        Sync implementation: semantic vector search.
+        Called via asyncio.to_thread from _vector_search.
         """
         results = []
-
-        # Perform semantic search
         vector_results = self.vdb.semantic_search(
             query=query,
             limit=top_k,
@@ -301,8 +295,8 @@ class HybridSearchOrchestrator:
         results_by_modality = {}
 
         for modality in modalities:
-            # Vector search filtered by modality
-            vector_results = self.vdb.search_by_modality(
+            vector_results = await asyncio.to_thread(
+                self.vdb.search_by_modality,
                 query=query,
                 modality=modality,
                 limit=top_k
