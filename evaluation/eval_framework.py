@@ -3,6 +3,16 @@ Evaluation Framework for Enterprise RAG System.
 
 This module defines success criteria BEFORE building the pipeline.
 It covers query types, metrics, and evaluation goals.
+
+NOTE - Placeholder metrics:
+  evaluate_response() currently returns fixed placeholder values for
+  retrieval_precision, retrieval_recall, context_relevance, answer_correctness,
+  answer_completeness, and hallucination_score. Only latency_ms is computed
+  from the actual request. For production, replace this with real metrics, e.g.:
+  - DeepEval (deepeval) for answer correctness and hallucination
+  - Custom retrieval metrics (precision/recall vs ground truth)
+  - LLM-as-judge or human feedback for completeness and relevance
+  See the Evaluation section in README.md for goals and thresholds.
 """
 
 from enum import Enum
@@ -222,8 +232,10 @@ def evaluate_response(
     """
     Evaluate a single query-response pair.
 
-    This is a simplified evaluation function. In production, you'd use
-    more sophisticated metrics (LLM-based evaluation, human feedback, etc.)
+    IMPORTANT: All quality metrics (precision, recall, correctness,
+    hallucination_score, etc.) are currently placeholders. Only latency_ms
+    is derived from the request. For production use, integrate DeepEval or
+    similar to compute real retrieval and answer quality metrics.
     """
     from datetime import datetime
 
@@ -231,7 +243,7 @@ def evaluate_response(
     if start_time:
         latency = int((datetime.now() - start_time).total_seconds() * 1000)
 
-    # Placeholder metrics - would be computed by DeepEval or similar
+    # Placeholder quality metrics - replace with DeepEval or real computation in production
     return EvaluationMetrics(
         retrieval_precision=0.85,
         retrieval_recall=0.80,
