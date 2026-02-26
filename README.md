@@ -64,7 +64,7 @@ A production-grade, multimodal Retrieval-Augmented Generation (RAG) system with 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd test-rag
+   cd Enterprise-rag-system
    ```
 
 2. **Install dependencies** (local development only)
