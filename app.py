@@ -10,6 +10,7 @@ FastAPI application with endpoints for:
 
 import logging
 import shutil
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional
@@ -376,7 +377,9 @@ async def upload_file(file: UploadFile = File(...)):
         safe_name = Path(raw_name).name
         if not safe_name or safe_name == ".":
             raise HTTPException(status_code=400, detail="Invalid filename")
-        file_path = (settings.upload_dir / safe_name).resolve()
+        # Use unique filename to avoid overwriting existing uploads
+        unique_name = f"{uuid.uuid4().hex[:12]}_{safe_name}"
+        file_path = (settings.upload_dir / unique_name).resolve()
         upload_dir_resolved = settings.upload_dir.resolve()
         if not str(file_path).startswith(str(upload_dir_resolved)):
             raise HTTPException(status_code=400, detail="Invalid file path")
