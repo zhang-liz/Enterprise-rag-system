@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -26,6 +27,14 @@ class Settings(BaseSettings):
 
     # Application Configuration
     upload_dir: Path = Path("./data/uploads")
+
+    @field_validator("upload_dir", mode="before")
+    @classmethod
+    def coerce_upload_dir(cls, v: Path | str) -> Path:
+        """Ensure upload_dir is always a Path for consistency in Docker and locally."""
+        if isinstance(v, str):
+            return Path(v)
+        return v
     chunk_size: int = 512
     chunk_overlap: int = 50
 
