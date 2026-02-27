@@ -438,6 +438,13 @@ async def upload_file(file: UploadFile = File(...)):
             }
         )
 
+        # Move file to processed dir to avoid unbounded disk use in upload_dir
+        processed_path = settings.processed_dir / file_path.name
+        try:
+            shutil.move(str(file_path), str(processed_path))
+        except OSError:
+            logger.warning("Could not move %s to processed dir, leaving in uploads", file_path.name)
+
         return JSONResponse({
             "status": "success",
             "file_id": processed_content.file_id,
