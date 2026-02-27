@@ -299,6 +299,12 @@ MIN_RELEVANCE_SCORE=0.7
 - Use Qdrant cluster for vector database
 - Deploy behind load balancer (e.g., nginx)
 
+### Security (Production)
+The default deployment has no authentication or rate limiting. For production:
+
+- **Authentication**: Add API key validation, JWT, or OAuth (e.g., FastAPI `Depends()` with a security scheme)
+- **Rate limiting**: Use `slowapi` or nginx `limit_req` to throttle `/upload` and `/query` and prevent abuse
+
 ## Troubleshooting
 
 ### Issue: OCR not working
