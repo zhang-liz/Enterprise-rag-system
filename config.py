@@ -27,11 +27,12 @@ class Settings(BaseSettings):
 
     # Application Configuration
     upload_dir: Path = Path("./data/uploads")
+    processed_dir: Path = Path("./data/processed")
 
-    @field_validator("upload_dir", mode="before")
+    @field_validator("upload_dir", "processed_dir", mode="before")
     @classmethod
-    def coerce_upload_dir(cls, v: Path | str) -> Path:
-        """Ensure upload_dir is always a Path for consistency in Docker and locally."""
+    def coerce_path(cls, v: Path | str) -> Path:
+        """Ensure path fields are always Path for consistency in Docker and locally."""
         if isinstance(v, str):
             return Path(v)
         return v
@@ -62,5 +63,5 @@ settings = Settings()
 
 # Ensure directories exist
 settings.upload_dir.mkdir(parents=True, exist_ok=True)
-Path("./data/processed").mkdir(parents=True, exist_ok=True)
+settings.processed_dir.mkdir(parents=True, exist_ok=True)
 Path("./logs").mkdir(parents=True, exist_ok=True)
